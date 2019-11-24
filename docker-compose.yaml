@@ -1,0 +1,39 @@
+version: '3.3'
+
+services:
+    traefik:
+        image: "traefik:v2.0.0-rc3"
+        command:
+            - --providers.docker.endpoint=unix:///var/run/docker.sock
+            - --providers.docker.swarmMode=true
+            - --providers.docker.watch=true
+            - --providers.docker.exposedByDefault=false
+            - --providers.docker.network=cake_traefik-net
+            - --api.insecure=true
+            - --providers.docker.exposedbydefault=false
+            - --entrypoints.api.address=:8888
+        ports:
+            - "8888:8888"
+            - "8080:8080"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+        networks:
+            - traefik-net
+    api:
+        image: austinfrey/cake-express-api:0.0.1
+        deploy:
+            replicas: 1
+            labels:
+                - "traefik.enable=true"
+                - "traefik.docker.network=cake_traefik-net"
+                - "traefik.http.routers.api.rule=PathPrefix(`/`)"
+                - "traefik.http.routers.api.entrypoints=api"
+                - "traefik.http.services.api.loadbalancer.server.port=3000"
+        volumes:
+            - ./api_env/.env:/usr/src/app/.env
+            - ./api_env/config.js:/usr/src/app/config.js
+        networks:
+            - traefik-net
+
+networks:
+    traefik-net:
