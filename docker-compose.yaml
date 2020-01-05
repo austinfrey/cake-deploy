@@ -12,6 +12,8 @@ services:
             - --api.insecure=true
             - --providers.docker.exposedbydefault=false
             - --entrypoints.api.address=:8888
+            - --api.debug=true
+            - --log.level=DEBUG
         ports:
             - "8888:8888"
             - "8080:8080"
@@ -30,9 +32,9 @@ services:
                 - "traefik.http.routers.api.entrypoints=api"
                 - "traefik.http.services.api.loadbalancer.server.port=3000"
         volumes:
+            - api_ssb:/root
             - ./api_env/.env:/usr/src/app/.env
             - ./api_env/config.js:/usr/src/app/config.js
-            - api_ssb:/root
         networks:
             - traefik-net
     emailer:
@@ -40,9 +42,9 @@ services:
         deploy:
             replicas: 1
         volumes:
+            - emailer_ssb:/root
             - ./emailer_env/.env:/usr/src/app/.env
             - ./emailer_env/config.js:/usr/src/app/config.js
-            - emailer_ssb:/root
         networks:
             - traefik-net
 
